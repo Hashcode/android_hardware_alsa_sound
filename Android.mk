@@ -23,7 +23,11 @@ ifneq ($(strip $(TARGET_PROVIDES_LIBAUDIO)),true)
     ALSAMixer.cpp \
     ALSAControl.cpp
 
+#ifdef BOARD_USES_AUDIO_LEGACY
+  LOCAL_MODULE := libaudio_ext
+#else
   LOCAL_MODULE := libaudio
+#endif
   LOCAL_MODULE_TAGS:= optional
 
   LOCAL_STATIC_LIBRARIES += libaudiointerface
