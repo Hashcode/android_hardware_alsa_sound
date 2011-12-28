@@ -30,7 +30,9 @@ ifneq ($(strip $(TARGET_PROVIDES_LIBAUDIO)),true)
 #endif
   LOCAL_MODULE_TAGS:= optional
 
-  LOCAL_STATIC_LIBRARIES += libaudiointerface
+  LOCAL_STATIC_LIBRARIES += \
+    libaudiohw_legacy
+#    libaudiointerface
 
   LOCAL_SHARED_LIBRARIES := \
     libasound \
@@ -62,7 +64,7 @@ endif
   LOCAL_MODULE := libaudiopolicy
   LOCAL_MODULE_TAGS:= optional
 
-  LOCAL_WHOLE_STATIC_LIBRARIES += libaudiopolicybase
+  LOCAL_WHOLE_STATIC_LIBRARIES += libaudiopolicy_legacy
 
   LOCAL_SHARED_LIBRARIES := \
     libcutils \

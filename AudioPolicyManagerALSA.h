@@ -24,7 +24,7 @@
 
 
 namespace android {
-
+//    using android_audio_legacy;
 // ----------------------------------------------------------------------------
 
 #define MAX_DEVICE_ADDRESS_LEN 20
@@ -35,15 +35,15 @@ namespace android {
 // Time in seconds during which we consider that music is still active after a music
 // track was stopped - see computeVolume()
 #define SONIFICATION_HEADSET_MUSIC_DELAY  5
-class AudioPolicyManagerALSA: public AudioPolicyManagerBase
+class AudioPolicyManagerALSA: public android_audio_legacy::AudioPolicyManagerBase
 {
 
 public:
-                AudioPolicyManagerALSA(AudioPolicyClientInterface *clientInterface);
+                AudioPolicyManagerALSA(android_audio_legacy::AudioPolicyClientInterface *clientInterface);
         virtual ~AudioPolicyManagerALSA();
 
-        status_t setDeviceConnectionState(AudioSystem::audio_devices device,
-                                                          AudioSystem::device_connection_state state,
+        status_t setDeviceConnectionState(android_audio_legacy::AudioSystem::audio_devices device,
+                                                          android_audio_legacy::AudioSystem::device_connection_state state,
                                                           const char *device_address);
         uint32_t getDeviceForStrategy(routing_strategy strategy, bool fromCache = true);
 #if defined(HAS_FM_RADIO) || defined(OMAP_ENHANCEMENT)
@@ -52,7 +52,7 @@ public:
                                             uint32_t samplingRate,
                                             uint32_t format,
                                             uint32_t channels,
-                                            AudioSystem::audio_in_acoustics acoustics);
+                                            android_audio_legacy::AudioSystem::audio_in_acoustics acoustics);
 #endif
         /* AudioPolicyManagerBase.cpp, in the stopoutoutput, setOutputDevice
          * is called by force(with flag true) which is causing Core is not going
@@ -61,7 +61,7 @@ public:
          * So we are overriding the stopOutput in Alsa vesrion of policy manger
          * now setOutputDevice is called with flag false.
          * */
-        status_t stopOutput(audio_io_handle_t output, AudioSystem::stream_type stream);
+        status_t stopOutput(audio_io_handle_t output, android_audio_legacy::AudioSystem::stream_type stream);
         /* In AudioPolicyManagerBase.cpp, in the getinput method if the inputsource
          * is AUDIO_SOURCE_VOICE_CALL the channels bitfield is filled with
          * (CHANNEL_IN_VOICE_UPLINK | CHANNEL_IN_VOICE_DNLINK) which force voice call

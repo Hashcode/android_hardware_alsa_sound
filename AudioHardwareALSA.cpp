@@ -130,7 +130,7 @@ status_t AudioHardwareALSA::setVoiceVolume(float volume)
         return mALSADevice->voicevolume(volume);
     else if (mMixer)
         // The voice volume is used by the VOICE_CALL audio stream.
-        return mMixer->setVolume(AudioSystem::DEVICE_OUT_EARPIECE, volume, volume);
+        return mMixer->setVolume(android_audio_legacy::AudioSystem::DEVICE_OUT_EARPIECE, volume, volume);
     else
         return INVALID_OPERATION;
 }
@@ -224,7 +224,7 @@ AudioHardwareALSA::openInputStream(uint32_t devices,
                                    uint32_t *channels,
                                    uint32_t *sampleRate,
                                    status_t *status,
-                                   AudioSystem::audio_in_acoustics acoustics)
+                                   android_audio_legacy::AudioSystem::audio_in_acoustics acoustics)
 {
     AutoMutex lock(mLock);
 
@@ -262,7 +262,7 @@ size_t AudioHardwareALSA::getInputBufferSize(uint32_t sampleRate, int format, in
         LOGW("getInputBufferSize bad sampling rate: %d", sampleRate);
         return 0;
     }
-    if (format != AudioSystem::PCM_16_BIT) {
+    if (format != android_audio_legacy::AudioSystem::PCM_16_BIT) {
         LOGW("getInputBufferSize bad format: %d", format);
         return 0;
     }
@@ -284,7 +284,7 @@ AudioHardwareALSA::closeInputStream(AudioStreamIn* in)
 status_t AudioHardwareALSA::setMicMute(bool state)
 {
     if (mMixer)
-        return mMixer->setCaptureMuteState(AudioSystem::DEVICE_OUT_EARPIECE, state);
+        return mMixer->setCaptureMuteState(android_audio_legacy::AudioSystem::DEVICE_OUT_EARPIECE, state);
 
     return NO_INIT;
 }
@@ -292,7 +292,7 @@ status_t AudioHardwareALSA::setMicMute(bool state)
 status_t AudioHardwareALSA::getMicMute(bool *state)
 {
     if (mMixer)
-        return mMixer->getCaptureMuteState(AudioSystem::DEVICE_OUT_EARPIECE, state);
+        return mMixer->getCaptureMuteState(android_audio_legacy::AudioSystem::DEVICE_OUT_EARPIECE, state);
 
     return NO_ERROR;
 }
