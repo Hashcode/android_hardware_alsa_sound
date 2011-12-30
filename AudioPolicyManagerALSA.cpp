@@ -22,15 +22,15 @@
 
 namespace android {
 
-status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_devices device,
-                                                  AudioSystem::device_connection_state state,
+status_t AudioPolicyManagerALSA::setDeviceConnectionState(android_audio_legacy::AudioSystem::audio_devices device,
+                                                  android_audio_legacy::AudioSystem::device_connection_state state,
                                                   const char *device_address)
 {
 
     LOGV("setDeviceConnectionState() device: %x, state %d, address %s", device, state, device_address);
 
     // connect/disconnect only 1 device at a time
-    if (AudioSystem::popCount(device) != 1) return BAD_VALUE;
+    if (android_audio_legacy::AudioSystem::popCount(device) != 1) return BAD_VALUE;
 
     if (strlen(device_address) >= MAX_DEVICE_ADDRESS_LEN) {
         LOGE("setDeviceConnectionState() invalid address: %s", device_address);
@@ -38,10 +38,10 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
     }
 
     // handle output devices
-    if (AudioSystem::isOutputDevice(device)) {
+    if (android_audio_legacy::AudioSystem::isOutputDevice(device)) {
 
 #ifndef WITH_A2DP
-        if (AudioSystem::isA2dpDevice(device)) {
+        if (android_audio_legacy::AudioSystem::isA2dpDevice(device)) {
             LOGE("setDeviceConnectionState() invalid device: %x", device);
             return BAD_VALUE;
         }
@@ -50,7 +50,7 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
         switch (state)
         {
         // handle output device connection
-        case AudioSystem::DEVICE_STATE_AVAILABLE:
+        case android_audio_legacy::AudioSystem::DEVICE_STATE_AVAILABLE:
             if (mAvailableOutputDevices & device) {
                 LOGW("setDeviceConnectionState() device already connected: %x", device);
                 return INVALID_OPERATION;
@@ -62,7 +62,7 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
 
 #ifdef WITH_A2DP
             // handle A2DP device connection
-            if (AudioSystem::isA2dpDevice(device)) {
+            if (android_audio_legacy::AudioSystem::isA2dpDevice(device)) {
                 status_t status = handleA2dpConnection(device, device_address);
                 if (status != NO_ERROR) {
                     mAvailableOutputDevices &= ~device;
@@ -71,13 +71,13 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
             } else
 #endif
             {
-                if (AudioSystem::isBluetoothScoDevice(device)) {
+                if (android_audio_legacy::AudioSystem::isBluetoothScoDevice(device)) {
                     LOGV("setDeviceConnectionState() BT SCO  device, address %s", device_address);
                     // keep track of SCO device address
                     mScoDeviceAddress = String8(device_address, MAX_DEVICE_ADDRESS_LEN);
 #ifdef WITH_A2DP
                     if (mA2dpOutput != 0 &&
-                        mPhoneState != AudioSystem::MODE_NORMAL) {
+                        mPhoneState != android_audio_legacy::AudioSystem::MODE_NORMAL) {
                         mpClientInterface->suspendOutput(mA2dpOutput);
                     }
 #endif
@@ -85,7 +85,7 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
             }
             break;
         // handle output device disconnection
-        case AudioSystem::DEVICE_STATE_UNAVAILABLE: {
+        case android_audio_legacy::AudioSystem::DEVICE_STATE_UNAVAILABLE: {
             if (!(mAvailableOutputDevices & device)) {
                 LOGW("setDeviceConnectionState() device not connected: %x", device);
                 return INVALID_OPERATION;
@@ -98,7 +98,7 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
 
 #ifdef WITH_A2DP
             // handle A2DP device disconnection
-            if (AudioSystem::isA2dpDevice(device)) {
+            if (android_audio_legacy::AudioSystem::isA2dpDevice(device)) {
                 status_t status = handleA2dpDisconnection(device, device_address);
                 if (status != NO_ERROR) {
                     mAvailableOutputDevices |= device;
@@ -107,11 +107,11 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
             } else
 #endif
             {
-                if (AudioSystem::isBluetoothScoDevice(device)) {
+                if (android_audio_legacy::AudioSystem::isBluetoothScoDevice(device)) {
                     mScoDeviceAddress = "";
 #ifdef WITH_A2DP
                     if (mA2dpOutput != 0 &&
-                        mPhoneState != AudioSystem::MODE_NORMAL) {
+                        mPhoneState != android_audio_legacy::AudioSystem::MODE_NORMAL) {
                         mpClientInterface->restoreOutput(mA2dpOutput);
                     }
 #endif
@@ -128,36 +128,36 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
         uint32_t newDevice = getNewDevice(mHardwareOutput, false);
 
         // force routing if device disconnection occurs when stream is stopped
-        if ((newDevice == 0) && (state == AudioSystem::DEVICE_STATE_UNAVAILABLE))
+        if ((newDevice == 0) && (state == android_audio_legacy::AudioSystem::DEVICE_STATE_UNAVAILABLE))
             newDevice = getDeviceForStrategy(STRATEGY_MEDIA, false);
 
 #ifdef WITH_A2DP
         checkOutputForAllStrategies();
         // A2DP outputs must be closed after checkOutputForAllStrategies() is executed
-        if (state == AudioSystem::DEVICE_STATE_UNAVAILABLE && AudioSystem::isA2dpDevice(device)) {
+        if (state == android_audio_legacy::AudioSystem::DEVICE_STATE_UNAVAILABLE && android_audio_legacy::AudioSystem::isA2dpDevice(device)) {
             closeA2dpOutputs();
         }
 #endif
         updateDeviceForStrategy();
         setOutputDevice(mHardwareOutput, newDevice);
 
-        if (device == AudioSystem::DEVICE_OUT_WIRED_HEADSET) {
-            device = AudioSystem::DEVICE_IN_WIRED_HEADSET;
-        } else if (device == AudioSystem::DEVICE_OUT_BLUETOOTH_SCO ||
-                   device == AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_HEADSET ||
-                   device == AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT) {
-            device = AudioSystem::DEVICE_IN_BLUETOOTH_SCO_HEADSET;
+        if (device == android_audio_legacy::AudioSystem::DEVICE_OUT_WIRED_HEADSET) {
+            device = android_audio_legacy::AudioSystem::DEVICE_IN_WIRED_HEADSET;
+        } else if (device == android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO ||
+                   device == android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_HEADSET ||
+                   device == android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT) {
+            device = android_audio_legacy::AudioSystem::DEVICE_IN_BLUETOOTH_SCO_HEADSET;
         } else {
             return NO_ERROR;
         }
     }
     // handle input devices
-    if (AudioSystem::isInputDevice(device)) {
+    if (android_audio_legacy::AudioSystem::isInputDevice(device)) {
 
         switch (state)
         {
         // handle input device connection
-        case AudioSystem::DEVICE_STATE_AVAILABLE: {
+        case android_audio_legacy::AudioSystem::DEVICE_STATE_AVAILABLE: {
             if (mAvailableInputDevices & device) {
                 LOGW("setDeviceConnectionState() device already connected: %d", device);
                 return INVALID_OPERATION;
@@ -167,7 +167,7 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
             break;
 
         // handle input device disconnection
-        case AudioSystem::DEVICE_STATE_UNAVAILABLE: {
+        case android_audio_legacy::AudioSystem::DEVICE_STATE_UNAVAILABLE: {
             if (!(mAvailableInputDevices & device)) {
                 LOGW("setDeviceConnectionState() device not connected: %d", device);
                 return INVALID_OPERATION;
@@ -195,22 +195,22 @@ status_t AudioPolicyManagerALSA::setDeviceConnectionState(AudioSystem::audio_dev
         }
 #if defined(HAS_FM_RADIO) || defined(OMAP_ENHANCEMENT)
         else {
-           if (device == AudioSystem::DEVICE_IN_FM_ANALOG) {
-               routing_strategy strategy = getStrategy((AudioSystem::stream_type)3);
+           if (device == android_audio_legacy::AudioSystem::DEVICE_IN_FM_ANALOG) {
+               routing_strategy strategy = getStrategy((android_audio_legacy::AudioSystem::stream_type)3);
                uint32_t curOutdevice = getDeviceForStrategy(strategy);
                /* If A2DP headset is connected then route FM to Headset */
-               if (curOutdevice == AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP ||
-                     curOutdevice == AudioSystem::DEVICE_OUT_BLUETOOTH_SCO) {
-                  curOutdevice = AudioSystem::DEVICE_OUT_WIRED_HEADSET;
+               if (curOutdevice == android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP ||
+                     curOutdevice == android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO) {
+                  curOutdevice = android_audio_legacy::AudioSystem::DEVICE_OUT_WIRED_HEADSET;
                }
 
                if (state) {
-                   // routing_strategy strategy = getStrategy((AudioSystem::stream_type)3);
+                   // routing_strategy strategy = getStrategy((android_audio_legacy::AudioSystem::stream_type)3);
                    // uint32_t curOutdevice = getDeviceForStrategy(strategy);
 
                    /* Get the new input descriptor for FM Rx In */
                     mfmInput = getFMInput(AUDIO_SOURCE_FM_ANALOG,8000,1,
-                           AudioSystem::CHANNEL_IN_MONO,(AudioSystem::audio_in_acoustics)7);
+                           android_audio_legacy::AudioSystem::CHANNEL_IN_MONO,(android_audio_legacy::AudioSystem::audio_in_acoustics)7);
 
                    /* Forcely open the current output device again for
                     * FM Rx playback path to open
@@ -266,7 +266,7 @@ uint32_t AudioPolicyManagerALSA::getDeviceForStrategy(routing_strategy strategy,
 
     switch (strategy) {
       case STRATEGY_DTMF:
-           if (mPhoneState != AudioSystem::MODE_IN_CALL) {
+           if (mPhoneState != android_audio_legacy::AudioSystem::MODE_IN_CALL) {
            // when off call, DTMF strategy follows the same rules as MEDIA strategy
               device = getDeviceForStrategy(STRATEGY_MEDIA, false);
               break;
@@ -276,53 +276,53 @@ uint32_t AudioPolicyManagerALSA::getDeviceForStrategy(routing_strategy strategy,
       case STRATEGY_PHONE:
            // for phone strategy, we first consider the forced use and then the available devices by order
            // of priority
-           switch (mForceUse[AudioSystem::FOR_COMMUNICATION]) {
-           case AudioSystem::FORCE_BT_SCO:
-              if (mPhoneState != AudioSystem::MODE_IN_CALL || strategy != STRATEGY_DTMF) {
-                  device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT;
+           switch (mForceUse[android_audio_legacy::AudioSystem::FOR_COMMUNICATION]) {
+           case android_audio_legacy::AudioSystem::FORCE_BT_SCO:
+              if (mPhoneState != android_audio_legacy::AudioSystem::MODE_IN_CALL || strategy != STRATEGY_DTMF) {
+                  device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT;
                   if (device) break;
               }
-              device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_HEADSET;
+              device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_HEADSET;
               if (device) break;
-              device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_SCO;
+              device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO;
               if (device) break;
               // if SCO device is requested but no SCO device is available, fall back to default case
               // FALL THROUGH
 
            default: // FORCE_NONE
-              device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE;
+              device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_WIRED_HEADPHONE;
               if (device) break;
-              device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADSET;
+              device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_WIRED_HEADSET;
               if (device) break;
 #ifdef WITH_A2DP
               // when not in a phone call, phone strategy should route STREAM_VOICE_CALL to A2DP
-              if (mPhoneState != AudioSystem::MODE_IN_CALL) {
-                  device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP;
+              if (mPhoneState != android_audio_legacy::AudioSystem::MODE_IN_CALL) {
+                  device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP;
                   if (device) break;
-                  device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES;
+                  device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES;
                   if (device) break;
               }
 #endif
-              device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_EARPIECE;
+              device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_EARPIECE;
               if (device == 0) {
                   LOGE("getDeviceForStrategy() earpiece device not found");
               }
               break;
 
-        case AudioSystem::FORCE_SPEAKER:
-              if (mPhoneState != AudioSystem::MODE_IN_CALL || strategy != STRATEGY_DTMF) {
-                    device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT;
+        case android_audio_legacy::AudioSystem::FORCE_SPEAKER:
+              if (mPhoneState != android_audio_legacy::AudioSystem::MODE_IN_CALL || strategy != STRATEGY_DTMF) {
+                    device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT;
                     if (device) break;
               }
 #ifdef WITH_A2DP
               // when not in a phone call, phone strategy should route STREAM_VOICE_CALL to
               // A2DP speaker when forcing to speaker output
-              if (mPhoneState != AudioSystem::MODE_IN_CALL) {
-                   device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER;
+              if (mPhoneState != android_audio_legacy::AudioSystem::MODE_IN_CALL) {
+                   device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER;
                    if (device) break;
               }
 #endif
-              device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_SPEAKER;
+              device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_SPEAKER;
               if (device == 0) {
                    LOGE("getDeviceForStrategy() speaker device not found");
               }
@@ -334,11 +334,11 @@ uint32_t AudioPolicyManagerALSA::getDeviceForStrategy(routing_strategy strategy,
 
               // If incall, just select the STRATEGY_PHONE device: The rest of the behavior is handled by
               // handleIncallSonification().
-              if (mPhoneState == AudioSystem::MODE_IN_CALL) {
+              if (mPhoneState == android_audio_legacy::AudioSystem::MODE_IN_CALL) {
                   device = getDeviceForStrategy(STRATEGY_PHONE, false);
                   break;
               }
-              device = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_SPEAKER;
+              device = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_SPEAKER;
               if (device == 0) {
                   LOGE("getDeviceForStrategy() speaker device not found");
               }
@@ -354,47 +354,47 @@ uint32_t AudioPolicyManagerALSA::getDeviceForStrategy(routing_strategy strategy,
                     break;
                 }
                 if (device2 == 0) {
-                    device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP;
+                    device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP;
                 }
                 if (device2 == 0) {
-                    device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES;
+                    device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES;
                 }
                 if (device2 == 0) {
-                    device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER;
+                    device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER;
                 }
             }
             else {
 #endif
-                device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_AUX_DIGITAL;
+                device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_AUX_DIGITAL;
                 if (device2 == 0) {
-                    device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE;
+                    device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_WIRED_HEADPHONE;
                 }
                 if (device2 == 0) {
-                    device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADSET;
+                    device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_WIRED_HEADSET;
                 }
 #ifdef WITH_A2DP
             }
 #endif
             // Once SCO connection is connected, map strategy_media to
             // SCO headset for music streaming. BT SCO MM_UL use case
-            if (mForceUse[AudioSystem::FOR_COMMUNICATION] == AudioSystem::FORCE_BT_SCO) {
+            if (mForceUse[android_audio_legacy::AudioSystem::FOR_COMMUNICATION] == android_audio_legacy::AudioSystem::FORCE_BT_SCO) {
                  if (device2 == 0) {
-                    device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT;
+                    device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT;
                  }
                  if (device2 == 0) {
-                    device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_HEADSET;
+                    device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_HEADSET;
                  }
                  if (device2 == 0) {
-                    device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_BLUETOOTH_SCO;
+                    device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_BLUETOOTH_SCO;
                  }
            }
 #if defined(HAS_FM_RADIO) || defined(OMAP_ENHANCEMENT)
             if (device2 == 0) {
-                device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_FM_TRANSMIT;
+                device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_FM_TRANSMIT;
             }
 #endif
             if (device2 == 0) {
-                device2 = mAvailableOutputDevices & AudioSystem::DEVICE_OUT_SPEAKER;
+                device2 = mAvailableOutputDevices & android_audio_legacy::AudioSystem::DEVICE_OUT_SPEAKER;
             }
 
             // device is DEVICE_OUT_SPEAKER if we come from case STRATEGY_SONIFICATION, 0 otherwise
@@ -417,13 +417,13 @@ audio_io_handle_t AudioPolicyManagerALSA::getFMInput(int inputSource,
                                     uint32_t samplingRate,
                                     uint32_t format,
                                     uint32_t channels,
-                                    AudioSystem::audio_in_acoustics acoustics)
+                                    android_audio_legacy::AudioSystem::audio_in_acoustics acoustics)
 {
     audio_io_handle_t input = 0;
     uint32_t device = 0;
 
     if (inputSource == AUDIO_SOURCE_FM_ANALOG)
-         device = AudioSystem::DEVICE_IN_FM_ANALOG;
+         device = android_audio_legacy::AudioSystem::DEVICE_IN_FM_ANALOG;
     else {
          /* wrong input source */
          return 0;
@@ -465,7 +465,7 @@ audio_io_handle_t AudioPolicyManagerALSA::getFMInput(int inputSource,
 }
 #endif
 
-status_t AudioPolicyManagerALSA::stopOutput(audio_io_handle_t output, AudioSystem::stream_type stream)
+status_t AudioPolicyManagerALSA::stopOutput(audio_io_handle_t output, android_audio_legacy::AudioSystem::stream_type stream)
 {
         LOGV("stopOutput() output %d, stream %d", output, stream);
         ssize_t index = mOutputs.indexOfKey(output);
@@ -474,10 +474,10 @@ status_t AudioPolicyManagerALSA::stopOutput(audio_io_handle_t output, AudioSyste
         return BAD_VALUE;
         }
         AudioOutputDescriptor *outputDesc = mOutputs.valueAt(index);
-        routing_strategy strategy = getStrategy((AudioSystem::stream_type)stream);
+        routing_strategy strategy = getStrategy((android_audio_legacy::AudioSystem::stream_type)stream);
 
         // handle special case for sonification while in call
-        if (mPhoneState == AudioSystem::MODE_IN_CALL) {
+        if (mPhoneState == android_audio_legacy::AudioSystem::MODE_IN_CALL) {
         handleIncallSonification(stream, false, false);
         }
         if (outputDesc->isUsedByStrategy(strategy)) {
@@ -492,7 +492,7 @@ status_t AudioPolicyManagerALSA::stopOutput(audio_io_handle_t output, AudioSyste
             newDevice = getDeviceForStrategy(STRATEGY_PHONE);
         } else if (outputDesc->isUsedByStrategy(STRATEGY_SONIFICATION)) {
             newDevice = getDeviceForStrategy(STRATEGY_SONIFICATION);
-        } else if (mPhoneState == AudioSystem::MODE_IN_CALL) {
+        } else if (mPhoneState == android_audio_legacy::AudioSystem::MODE_IN_CALL) {
             newDevice = getDeviceForStrategy(STRATEGY_PHONE);
         } else if (outputDesc->isUsedByStrategy(STRATEGY_MEDIA)) {
             newDevice = getDeviceForStrategy(STRATEGY_MEDIA);
@@ -506,8 +506,8 @@ status_t AudioPolicyManagerALSA::stopOutput(audio_io_handle_t output, AudioSyste
               setOutputDevice(mHardwareOutput, newDevice, false, mOutputs.valueFor(mHardwareOutput)->mLatency*2);
         }
         // store time at which the last music track was stopped - see computeVolume()
-        if (stream == AudioSystem::MUSIC) {
-               mMusicStopTime = systemTime();
+        if (stream == android_audio_legacy::AudioSystem::MUSIC) {
+              // mStopTime = systemTime();
            }
            return NO_ERROR;
            } else {
@@ -521,7 +521,7 @@ audio_io_handle_t AudioPolicyManagerALSA::getInput(int inputSource,
                                     uint32_t samplingRate,
                                     uint32_t format,
                                     uint32_t channels,
-                                    AudioSystem::audio_in_acoustics acoustics)
+                                    android_audio_legacy::AudioSystem::audio_in_acoustics acoustics)
 {
     audio_io_handle_t input = 0;
     uint32_t device = getDeviceForInputSource(inputSource);
@@ -535,13 +535,13 @@ audio_io_handle_t AudioPolicyManagerALSA::getInput(int inputSource,
     // adapt channel selection to input source
     switch(inputSource) {
     case AUDIO_SOURCE_VOICE_UPLINK:
-        channels = AudioSystem::CHANNEL_IN_VOICE_UPLINK;
+        channels = android_audio_legacy::AudioSystem::CHANNEL_IN_VOICE_UPLINK;
         break;
     case AUDIO_SOURCE_VOICE_DOWNLINK:
-        channels = AudioSystem::CHANNEL_IN_VOICE_DNLINK;
+        channels = android_audio_legacy::AudioSystem::CHANNEL_IN_VOICE_DNLINK;
         break;
     case AUDIO_SOURCE_VOICE_CALL:
-        channels = AudioSystem::CHANNEL_IN_VOICE_UPLINK_DNLINK;
+        channels = android_audio_legacy::AudioSystem::CHANNEL_IN_VOICE_UPLINK_DNLINK;
         break;
     default:
         break;
@@ -580,19 +580,27 @@ audio_io_handle_t AudioPolicyManagerALSA::getInput(int inputSource,
 }
 
 #endif
+//}; // namespace android
+
+
+
 
 // ----------------------------------------------------------------------------
 // AudioPolicyManagerALSA
 // ----------------------------------------------------------------------------
 
 // ---  class factory
+//namespace android_audio_legacy{
+using android_audio_legacy::AudioPolicyInterface;
+using android_audio_legacy::AudioPolicyClientInterface;
+
 
 extern "C" AudioPolicyInterface* createAudioPolicyManager(AudioPolicyClientInterface *clientInterface)
 {
     return new AudioPolicyManagerALSA(clientInterface);
 }
 
-extern "C" void destroyAudioPolicyManager(AudioPolicyInterface *interface)
+extern "C" void destroyAudioPolicyManager(android_audio_legacy::AudioPolicyInterface *interface)
 {
     delete interface;
 }
@@ -608,4 +616,6 @@ AudioPolicyManagerALSA::~AudioPolicyManagerALSA()
 {
 }
 
-}; // namespace android
+}
+
+

@@ -24,9 +24,12 @@
 #include <alsa/asoundlib.h>
 
 #include <hardware/hardware.h>
+#include <utils/threads.h>
 
 namespace android
 {
+
+using namespace android_audio_legacy;
 
 class AudioHardwareALSA;
 
@@ -82,7 +85,7 @@ struct acoustic_device_t {
     status_t (*use_handle)(acoustic_device_t *, alsa_handle_t *);
     status_t (*cleanup)(acoustic_device_t *);
 
-    status_t (*set_params)(acoustic_device_t *, AudioSystem::audio_in_acoustics, void *);
+    status_t (*set_params)(acoustic_device_t *,    android_audio_legacy::AudioSystem::audio_in_acoustics, void *);
 
     // Optional methods...
     ssize_t (*read)(acoustic_device_t *, void *, size_t);
@@ -164,7 +167,7 @@ protected:
     AudioHardwareALSA *     mParent;
     alsa_handle_t *         mHandle;
 
-    Mutex                   mLock;
+    android::Mutex                   mLock;
     bool                    mPowerLock;
 };
 
@@ -227,7 +230,7 @@ class AudioStreamInALSA : public AudioStreamIn, public ALSAStreamOps
 public:
     AudioStreamInALSA(AudioHardwareALSA *parent,
             alsa_handle_t *handle,
-            AudioSystem::audio_in_acoustics audio_acoustics);
+            android_audio_legacy::AudioSystem::audio_in_acoustics audio_acoustics);
     virtual            ~AudioStreamInALSA();
 
     virtual uint32_t    sampleRate() const
@@ -257,6 +260,10 @@ public:
 
     virtual status_t    standby();
 
+    virtual status_t	addAudioEffect(effect_interface_s**){return 0;};
+
+    virtual status_t	removeAudioEffect(effect_interface_s**){return 0;};
+
     virtual status_t    setParameters(const String8& keyValuePairs)
     {
         return ALSAStreamOps::setParameters(keyValuePairs);
@@ -282,7 +289,7 @@ private:
     void                resetFramesLost();
 
     unsigned int        mFramesLost;
-    AudioSystem::audio_in_acoustics mAcoustics;
+    android_audio_legacy::AudioSystem::audio_in_acoustics mAcoustics;
 };
 
 class AudioHardwareALSA : public AudioHardwareBase
@@ -343,7 +350,7 @@ public:
             uint32_t *channels,
             uint32_t *sampleRate,
             status_t *status,
-            AudioSystem::audio_in_acoustics acoustics);
+            android_audio_legacy::AudioSystem::audio_in_acoustics acoustics);
     virtual    void        closeInputStream(AudioStreamIn* in);
 
     /**This method dumps the state of the audio hardware */
